@@ -1,0 +1,154 @@
+(
+SynthDef("Clarinet1", { arg scl = 0.1, freq = 300, ipress = 0.8, ibreath = 0.01, ifeedbk1 = 0.4, ifeedbk2 = 0.4, dur = 1, gate = 1, amp = 2, vibrato=2.9;
+    var kenv1, kenv2, kenvibr, kvibr, sr, cr, block, poly, signalOut, ifqc,  fdbckArray;
+    var aflow1, asum1, asum2, afqc, atemp1, ax, apoly, asum3, avalue, atemp2, aClarinet1;
+
+    sr = SampleRate.ir;
+    cr = ControlRate.ir;
+    block = cr.reciprocal;
+    ifqc = freq;
+//	 ifqc = pch;
+    // noise envelope
+    kenv1 = EnvGen.kr(Env.new(
+        [ 0.0, 1.0 * ipress, ipress, ipress, 0.0 ], [ 0.06, 0.3, dur - 0.46, 0.2 ], 'linear' )
+    );
+    // overall envelope
+    kenv2 = EnvGen.kr(Env.new(
+        [ 0.0, amp, amp, 0.0 ], [ 0.1, dur - 0.02, 0.1 ], 'linear' ), doneAction: 2
+    );
+    // vibrato envelope
+    kenvibr = EnvGen.kr(Env.new( [ 0.0, 0.0, 1, 1, 0.0 ], [ 0.5, 0.5, dur - 1.5, 0.5 ], 'linear') )*vibrato;
+    // create air flow and vibrato
+    aflow1 = LFClipNoise.ar( sr, kenv1 );
+    kvibr = SinOsc.ar( 5, 0, 0.1 * kenvibr );
+    asum1 = ( ibreath * aflow1 ) + kenv1 + kvibr;
+    afqc = ifqc.reciprocal - ( asum1/20000 ) - ( 9/sr ) + ( ifqc/12000000 ) - block;
+    fdbckArray = LocalIn.ar( 1 );
+    aclarinet1 = fdbckArray;
+    asum2 = asum1 + ( asaxophone1 * ifeedbk1 );
+    //ax = DelayL.ar( asum2, ifqc.reciprocal * 0.5, afqc * 0.5 );
+    ax = DelayC.ar( asum2, ifqc.reciprocal - block * 0.5, afqc * 0.5 - ( asum1/ifqc/cr ) + 0.001 );
+    apoly = ax - ( ax.cubed );
+    asum3 = apoly + ( asaxophone1 * ifeedbk2 );
+    avalue = LPF.ar( asum3, 2000 );
+    aclarinet1 = DelayC.ar( avalue, ifqc.reciprocal - block, afqc );
+    fdbckArray = [ aclarinet1 ];
+    LocalOut.ar( fdbckArray );
+    signalOut = avalue;
+    OffsetOut.ar( 0, [ signalOut * kenv2, signalOut * kenv2 ] );
+}).add;
+)
+
+// Saxophone Synth with air effect
+(
+SynthDef("Saxophone2", { arg scl = 0.2, freq = 442, ipress = 0.9, ibreath = 0.09, ifeedbk1 = 0.4, ifeedbk2 = 0.4, dur = 1, gate = 1, amp = 2, vibrato=0.2;
+    var kenv1, kenv2, kenvibr, kvibr, sr, cr, block, poly, signalOut, ifqc,  fdbckArray;
+    var aflow1, asum1, asum2, afqc, atemp1, ax, apoly, asum3, avalue, atemp2, aclarinet1;
+
+    sr = SampleRate.ir;
+    cr = ControlRate.ir;
+    block = cr.reciprocal;
+    ifqc = freq;
+//	 ifqc = pch;
+    // noise envelope
+    kenv1 = EnvGen.kr(Env.new(
+        [ 0.0, 1.1 * ipress, ipress, ipress, 0.0 ], [ 0.06, 0.2, dur - 0.46, 0.2 ], 'linear' )
+    );
+    // overall envelope
+    kenv2 = EnvGen.kr(Env.new(
+        [ 0.0, amp, amp, 0.0 ], [ 0.1, dur - 0.02, 0.1 ], 'linear' ), doneAction: 2
+    );
+    // vibrato envelope
+    kenvibr = EnvGen.kr(Env.new( [ 0.0, 0.0, 1, 1, 0.0 ], [ 0.5, 0.5, dur - 1.5, 0.5 ], 'linear') )*vibrato;
+    // create air flow and vibrato
+    aflow1 = LFClipNoise.ar( sr, kenv1 );
+    kvibr = SinOsc.ar( 5, 0, 0.1 * kenvibr );
+    asum1 = ( ibreath * aflow1 ) + kenv1 + kvibr;
+    afqc = ifqc.reciprocal - ( asum1/20000 ) - ( 9/sr ) + ( ifqc/12000000 ) - block;
+    fdbckArray = LocalIn.ar( 1 );
+    aclarinet1 = fdbckArray;
+    asum2 = asum1 + ( aclarinet1 * ifeedbk1 );
+    //ax = DelayL.ar( asum2, ifqc.reciprocal * 0.5, afqc * 0.5 );
+    ax = DelayC.ar( asum2, ifqc.reciprocal - block * 0.5, afqc * 0.5 - ( asum1/ifqc/cr ) + 0.001 );
+    apoly = ax - ( ax.cubed );
+    asum3 = apoly + ( aclarinet1 * ifeedbk2 );
+    avalue = LPF.ar( asum3, 2000 );
+    aclarinet1 = DelayC.ar( avalue, ifqc.reciprocal - block, afqc );
+    fdbckArray = [ aclarinet1 ];
+    LocalOut.ar( fdbckArray );
+    signalOut = avalue;
+    OffsetOut.ar( 0, [ signalOut * kenv2, signalOut * kenv2 ] );
+}).add;
+)
+
+// clarinet Synth just with air
+(
+SynthDef("clarinet3", { arg scl = 0.2, freq = 442, ipress = 0.9, ibreath = 0.5, ifeedbk1 = 0.4, ifeedbk2 = 0.4, dur = 1, gate = 1, amp = 0.8, vibrato=0.4;
+    var kenv1, kenv2, kenvibr, kvibr, sr, cr, block, poly, signalOut, ifqc,  fdbckArray;
+    var aflow1, asum1, asum2, afqc, atemp1, ax, apoly, asum3, avalue, atemp2, aclarinet1;
+
+    sr = SampleRate.ir;
+    cr = ControlRate.ir;
+    block = cr.reciprocal;
+    ifqc = freq;
+//	 ifqc = pch;
+    // noise envelope
+    kenv1 = EnvGen.kr(Env.new(
+        [ 0.0, 1.1 * ipress, ipress, ipress, 0.0 ], [ 0.06, 0.2, dur - 0.46, 0.2 ], 'linear' )
+    );
+    // overall envelope
+    kenv2 = EnvGen.kr(Env.new(
+        [ 0.0, amp, amp, 0.01 ], [ 0.1, dur - 0.02, 0.1 ], 'linear' ), doneAction: 2
+    );
+    // vibrato envelope
+    kenvibr = EnvGen.kr(Env.new( [ 0.0, 0.0, 1, 1, 0.0 ], [ 0.5, 0.5, dur - 1.5, 0.5 ], 'linear') )*vibrato;
+    // create air flow and vibrato
+    aflow1 = LFClipNoise.ar( sr, kenv1 );
+    kvibr = SinOsc.ar( 5, 0, 0.1 * kenvibr );
+    asum1 = ( ibreath * aflow1 ) + kenv1 + kvibr;
+    afqc = ifqc.reciprocal - ( asum1/20000 ) - ( 9/sr ) + ( ifqc/12000000 ) - block;
+    fdbckArray = LocalIn.ar( 1 );
+    aclarinet1 = fdbckArray;
+    asum2 = asum1 + ( aclarinet1 * ifeedbk1 );
+    //ax = DelayL.ar( asum2, ifqc.reciprocal * 0.5, afqc * 0.5 );
+    ax = DelayC.ar( asum2, ifqc.reciprocal - block * 0.5, afqc * 0.5 - ( asum1/ifqc/cr ) + 0.001 );
+    apoly = ax - ( ax.cubed );
+    asum3 = apoly + ( aclarinet1 * ifeedbk2 );
+    avalue = LPF.ar( asum3, 2000 );
+    aclarinet1 = DelayC.ar( avalue, ifqc.reciprocal - block, afqc );
+    fdbckArray = [ aclarinet1 ];
+    LocalOut.ar( fdbckArray );
+    signalOut = avalue;
+    OffsetOut.ar( 0, [ signalOut * kenv2, signalOut * kenv2 ] );
+}).add;
+)
+
+
+//Test of synths
+
+Synth("clarinet1");
+Synth("clarinet2");
+Synth("clarinet3");
+
+
+/*
+https://gist.github.com/iani/d8d6545a172042dfbcd48f67a72cdfe5#file-pbind_score-scd
+*/
+
+// Fuction for playing Pbinds automatically
+
+(
+~pbplay = { | ... durs |
+	var event, process, duration;
+	//{
+		durs do: { | what, i |
+			#duration, event = what.asArray;
+			postf("playing % for: %\n", event, duration);
+			process = event.play;
+			duration.wait;
+			process.stop;
+		};
+		"DONE".postln;
+	//}.fork;
+};
+)
